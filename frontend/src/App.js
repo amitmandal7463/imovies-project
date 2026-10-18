@@ -58,6 +58,9 @@ function App() {
     getCurrentUser()
       .then((result) => {
         if (active) {
+          if (result.user) {
+            setBookingsLoading(true);
+          }
           setUser(result.user);
         }
       })
@@ -227,6 +230,8 @@ function App() {
   }
 
   function handleAuthenticated(authenticatedUser) {
+    setBookingsLoading(true);
+    setBookingsError("");
     setUser(authenticatedUser);
     setAuthModalOpen(false);
     const resumeAction = authResumeAction;
@@ -563,14 +568,16 @@ function App() {
           onBookingSaved={handleBookingSaved}
         />
       </section>
-      {user ? (
-        <BookingSummary
-          bookings={bookings}
-          loading={bookingsLoading}
-          error={bookingsError}
-          onCancelBooking={handleCustomerBookingCancel}
-        />
-      ) : null}
+      <BookingSummary
+        bookings={bookings}
+        loading={bookingsLoading}
+        error={bookingsError}
+        authenticated={Boolean(user)}
+        authLoading={authLoading}
+        onSignIn={() => openAuthModal("login")}
+        onRetry={() => setBookingsReload((current) => current + 1)}
+        onCancelBooking={handleCustomerBookingCancel}
+      />
         </>
       )}
 

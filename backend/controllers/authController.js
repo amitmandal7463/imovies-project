@@ -1,7 +1,7 @@
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
-const { cookieName } = require("../middleware/requireAuth");
+const { cookieName, getSessionToken } = require("../middleware/requireAuth");
 
 const sessionDurationMs = 7 * 24 * 60 * 60 * 1000;
 
@@ -33,7 +33,7 @@ function issueSession(user, response) {
     expiresIn: "7d",
   });
   response.cookie(cookieName, token, sessionCookieOptions());
-  return publicUser(user);
+  return { user: publicUser(user), token };
 }
 
 function validateCredentials({ name, email, password }, requireName) {
@@ -79,7 +79,7 @@ async function register(request, response, next) {
       role: "customer",
     });
 
-    response.status(201).json({ user: issueSession(user, response) });
+    response.status(201).json(issueSession(user, response));
   } catch (error) {
     if (error.code === 11000) {
       return response.status(409).json({ message: "An account with that email already exists." });
@@ -102,7 +102,7 @@ async function login(request, response, next) {
       return response.status(401).json({ message: "Email or password is incorrect." });
     }
 
-    response.json({ user: issueSession(user, response) });
+    response.json(issueSession(user, response));
   } catch (error) {
     next(error);
   }
@@ -110,7 +110,7 @@ async function login(request, response, next) {
 
 async function currentUser(request, response, next) {
   try {
-    const token = request.cookies?.[cookieName];
+    const token = getSessionToken(request);
     if (!token) {
       return response.json({ user: null });
     }

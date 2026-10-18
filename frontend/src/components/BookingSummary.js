@@ -37,7 +37,16 @@ function formatShowDate(value) {
       });
 }
 
-function BookingSummary({ bookings, loading, error, onCancelBooking }) {
+function BookingSummary({
+  bookings,
+  loading,
+  error,
+  authenticated,
+  authLoading,
+  onSignIn,
+  onRetry,
+  onCancelBooking,
+}) {
   const [cancellingBookingId, setCancellingBookingId] = useState("");
   const [cancellationError, setCancellationError] = useState("");
 
@@ -60,24 +69,57 @@ function BookingSummary({ bookings, loading, error, onCancelBooking }) {
           <p className="eyebrow">YOUR ORDERS</p>
           <h2 id="booking-summary-title">Booking summary</h2>
         </div>
-        <span className="booking-summary-count">
-          {bookings.length} {bookings.length === 1 ? "booking" : "bookings"}
-        </span>
+        {authenticated && !loading ? (
+          <span className="booking-summary-count">
+            {bookings.length} {bookings.length === 1 ? "booking" : "bookings"}
+          </span>
+        ) : null}
       </div>
 
-      {loading && bookings.length === 0 ? (
+      {authLoading ? (
+        <p className="status" role="status">Checking your sign-in…</p>
+      ) : !authenticated ? (
+        <div className="booking-summary-empty">
+          <h3>Sign in to view your bookings</h3>
+          <p>Your confirmed tickets will appear here after you sign in.</p>
+          <button className="retry-button" onClick={onSignIn} type="button">
+            Sign in
+          </button>
+        </div>
+      ) : loading && bookings.length === 0 ? (
         <p className="status" role="status">Loading your bookings…</p>
       ) : error && bookings.length === 0 ? (
-        <p className="feedback error" role="alert">{error}</p>
+        <div className="booking-summary-error">
+          <p className="feedback error" role="alert">{error}</p>
+          <button className="retry-button" disabled={loading} onClick={onRetry} type="button">
+            {loading ? "Retrying…" : "Retry"}
+          </button>
+          {/\b401\b|log in|login|session/i.test(error) ? (
+            <button className="text-button" onClick={onSignIn} type="button">
+              Sign in again
+            </button>
+          ) : null}
+        </div>
       ) : bookings.length === 0 ? (
         <div className="booking-summary-empty">
           <h3>No bookings yet</h3>
           <p>Your confirmed movie tickets will appear here.</p>
+          {error ? <p className="feedback error" role="alert">{error}</p> : null}
+          {error ? (
+            <button className="retry-button" disabled={loading} onClick={onRetry} type="button">
+              {loading ? "Retrying…" : "Retry"}
+            </button>
+          ) : null}
         </div>
       ) : (
         <>
           {loading ? <p className="status" role="status">Refreshing your bookings…</p> : null}
           {error ? <p className="feedback error" role="alert">{error}</p> : null}
+          {error ? (
+            <button className="retry-button" disabled={loading} onClick={onRetry} type="button">
+              {loading ? "Retrying…" : "Retry"}
+            </button>
+          ) : null}
           {cancellationError ? (
             <p className="feedback error" role="alert">{cancellationError}</p>
           ) : null}

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { loginUser, registerUser } from "../services/api";
+import { loginUser, registerUser, storeAuthToken } from "../services/api";
 import RegisterForm from "./RegisterForm";
 
 function AuthModal({ initialMode = "login", onAuthenticated, onClose }) {
@@ -40,6 +40,7 @@ function AuthModal({ initialMode = "login", onAuthenticated, onClose }) {
         mode === "signup"
           ? await registerUser({ name, email, password, role })
           : await loginUser({ email, password });
+      storeAuthToken(response.token);
       onAuthenticated(response.user);
     } catch (authError) {
       setError(authError.message);

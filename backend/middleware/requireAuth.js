@@ -3,8 +3,14 @@ const User = require("../models/User");
 
 const cookieName = "imovies_session";
 
+function getSessionToken(request) {
+  const authorization = request.get("Authorization") || "";
+  const bearerMatch = /^Bearer\s+(.+)$/i.exec(authorization);
+  return bearerMatch ? bearerMatch[1] : request.cookies?.[cookieName];
+}
+
 async function requireAuth(request, response, next) {
-  const token = request.cookies?.[cookieName];
+  const token = getSessionToken(request);
   if (!token) {
     return response.status(401).json({ message: "Please log in to continue." });
   }
@@ -36,4 +42,4 @@ function requireRole(...roles) {
   };
 }
 
-module.exports = { requireAuth, requireRole, cookieName };
+module.exports = { requireAuth, requireRole, cookieName, getSessionToken };

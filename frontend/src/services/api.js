@@ -1,4 +1,5 @@
 const API_URL = (process.env.REACT_APP_API_URL || "http://localhost:5000").replace(/\/+$/, "");
+const AUTH_TOKEN_STORAGE_KEY = "imovies_auth_token";
 
 function buildApiUrl(path) {
   return `${API_URL}/${path.replace(/^\/+/, "")}`;
@@ -6,14 +7,19 @@ function buildApiUrl(path) {
 
 async function request(path, options = {}) {
   const url = buildApiUrl(path);
+  const token = window.localStorage.getItem(AUTH_TOKEN_STORAGE_KEY);
+  const headers = {
+    Accept: "application/json",
+    ...(options.body ? { "Content-Type": "application/json" } : {}),
+    ...options.headers,
+  };
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
   const response = await fetch(url, {
     ...options,
     credentials: "include",
-    headers: {
-      Accept: "application/json",
-      ...(options.body ? { "Content-Type": "application/json" } : {}),
-      ...options.headers,
-    },
+    headers,
   });
   if (response.status === 204) {
     return null;
@@ -41,6 +47,13 @@ export function getCurrentUser() {
   return request("/api/auth/me");
 }
 
+export function storeAuthToken(token) {
+  if (typeof token !== "string" || !token.trim()) {
+    throw new Error("The authentication response did not include a valid session token.");
+  }
+  window.localStorage.setItem(AUTH_TOKEN_STORAGE_KEY, token);
+}
+
 export function registerUser(credentials) {
   return request("/api/auth/register", {
     method: "POST",
@@ -56,7 +69,10 @@ export function loginUser(credentials) {
 }
 
 export function logoutUser() {
-  return request("/api/auth/logout", { method: "POST" });
+  return request("/api/auth/logout", { method: "POST" }).then((result) => {
+    window.localStorage.removeItem(AUTH_TOKEN_STORAGE_KEY);
+    return result;
+  });
 }
 
 export function createMovie(movie) {

@@ -114,8 +114,11 @@ To bootstrap an owner on backend startup, configure `OWNER_EMAIL` and
 and keep it private). The owner is created if absent. If an account with that
 email already exists, it is promoted only when its password matches the
 configured owner password. Do not set `OWNER_PASSWORD` in source control.
-Passwords are hashed and sessions use an HTTP-only cookie. Configure a strong,
-private `JWT_SECRET` in `backend/.env`.
+Passwords are hashed and sessions use an HTTP-only cookie. The frontend also
+stores the session token in local storage and sends it as a Bearer token for API
+requests. Because browser JavaScript can access local storage, protect the app
+against cross-site scripting. Configure a strong, private `JWT_SECRET` in
+`backend/.env`.
 
 The header profile icon opens the login/signup popup, and choosing **Book
 Ticket** prompts for login only when needed. After login, the app returns to
