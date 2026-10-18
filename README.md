@@ -95,10 +95,12 @@ the booking. No real payment is processed.
 - `POST /api/bookings` — book seats for a movie
 
 Roles are `customer`, `admin`, and `owner`. Public registration always creates
-a `customer`; submitted role values are ignored. The signup popup has no role
-selector. Movie browsing is public, booking endpoints require login, and movie
-create/update/delete endpoints require `admin` or `owner`. Roles are loaded
-from MongoDB for each authorized request rather than trusted from browser data.
+a `customer`; submitted role values are ignored. The signup form includes a
+role selector, but only customer registration is available; admin and owner
+access is assigned separately. Movie browsing is public, booking endpoints
+require login, and movie create/update/delete endpoints require `admin` or
+`owner`. Roles are loaded from MongoDB for each authorized request rather than
+trusted from browser data.
 
 To bootstrap an owner on backend startup, configure `OWNER_EMAIL` and
 `OWNER_PASSWORD` in `backend/.env` (use a unique password of 12-72 UTF-8 bytes

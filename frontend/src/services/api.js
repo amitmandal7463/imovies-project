@@ -1,7 +1,12 @@
-const API_URL = (process.env.REACT_APP_API_URL || "http://localhost:5000").replace(/\/$/, "");
+const API_URL = (process.env.REACT_APP_API_URL || "http://localhost:5000").replace(/\/+$/, "");
+
+function buildApiUrl(path) {
+  return `${API_URL}/${path.replace(/^\/+/, "")}`;
+}
 
 async function request(path, options = {}) {
-  const response = await fetch(`${API_URL}${path}`, {
+  const url = buildApiUrl(path);
+  const response = await fetch(url, {
     ...options,
     credentials: "include",
     headers: {
@@ -10,7 +15,17 @@ async function request(path, options = {}) {
       ...options.headers,
     },
   });
-  const result = response.status === 204 ? null : await response.json();
+  if (response.status === 204) {
+    return null;
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  if (!contentType.includes("application/json") && !contentType.includes("+json")) {
+    throw new Error(
+      `Expected a JSON response from ${url}, but received ${contentType || "an unknown content type"} (HTTP ${response.status}).`
+    );
+  }
+  const result = await response.json();
 
   if (!response.ok) {
     throw new Error(result?.message || `Request failed with status ${response.status}.`);

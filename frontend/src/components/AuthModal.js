@@ -1,11 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { loginUser, registerUser } from "../services/api";
+import RegisterForm from "./RegisterForm";
 
-function AuthModal({ onAuthenticated, onClose }) {
-  const [mode, setMode] = useState("login");
+function AuthModal({ initialMode = "login", onAuthenticated, onClose }) {
+  const [mode, setMode] = useState(initialMode);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("customer");
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const firstInputRef = useRef(null);
@@ -36,7 +38,7 @@ function AuthModal({ onAuthenticated, onClose }) {
     try {
       const response =
         mode === "signup"
-          ? await registerUser({ name, email, password })
+          ? await registerUser({ name, email, password, role })
           : await loginUser({ email, password });
       onAuthenticated(response.user);
     } catch (authError) {
@@ -62,7 +64,7 @@ function AuthModal({ onAuthenticated, onClose }) {
         role="dialog"
       >
         <button
-          aria-label="Close login dialog"
+          aria-label="Close account dialog"
           className="payment-close"
           disabled={submitting}
           onClick={onClose}
@@ -97,53 +99,54 @@ function AuthModal({ onAuthenticated, onClose }) {
             Sign up
           </button>
         </div>
-        <form className="auth-form" onSubmit={submit}>
-          {mode === "signup" ? (
+        {mode === "signup" ? (
+          <RegisterForm
+            email={email}
+            error={error}
+            name={name}
+            onEmailChange={(event) => setEmail(event.target.value)}
+            onNameChange={(event) => setName(event.target.value)}
+            onPasswordChange={(event) => setPassword(event.target.value)}
+            onRoleChange={(event) => setRole(event.target.value)}
+            onSubmit={submit}
+            password={password}
+            role={role}
+            submitting={submitting}
+            usernameInputRef={firstInputRef}
+          />
+        ) : (
+          <form className="auth-form" onSubmit={submit}>
             <label>
-              Name
+              Email address
               <input
-                autoComplete="name"
-                maxLength="120"
-                onChange={(event) => setName(event.target.value)}
+                autoComplete="email"
+                maxLength="254"
+                onChange={(event) => setEmail(event.target.value)}
                 ref={firstInputRef}
                 required
-                value={name}
+                type="email"
+                value={email}
               />
             </label>
-          ) : null}
-          <label>
-            Email address
-            <input
-              autoComplete="email"
-              maxLength="254"
-              onChange={(event) => setEmail(event.target.value)}
-              ref={mode === "login" ? firstInputRef : undefined}
-              required
-              type="email"
-              value={email}
-            />
-          </label>
-          <label>
-            Password
-            <input
-              autoComplete={mode === "signup" ? "new-password" : "current-password"}
-              minLength="8"
-              maxLength="72"
-              onChange={(event) => setPassword(event.target.value)}
-              required
-              type="password"
-              value={password}
-            />
-          </label>
-          {mode === "signup" ? (
-            <p className="auth-hint">Use at least 8 characters for your password.</p>
-          ) : null}
-          {error ? <p className="feedback error" role="alert">{error}</p> : null}
-          <button className="submit-button" disabled={submitting} type="submit">
-            {submitting ? "Please wait…" : mode === "signup" ? "Create account" : "Log in"}
-            <span aria-hidden="true">→</span>
-          </button>
-        </form>
+            <label>
+              Password
+              <input
+                autoComplete="current-password"
+                minLength="8"
+                maxLength="72"
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                type="password"
+                value={password}
+              />
+            </label>
+            {error ? <p className="feedback error" role="alert">{error}</p> : null}
+            <button className="submit-button" disabled={submitting} type="submit">
+              {submitting ? "Please wait…" : "Log in"}
+              <span aria-hidden="true">→</span>
+            </button>
+          </form>
+        )}
       </section>
     </div>
   );

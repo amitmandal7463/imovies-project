@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import AddMovieForm from "./components/AddMovieForm";
+import AdminDashboard from "./components/AdminDashboard";
 import AuthModal from "./components/AuthModal";
 import BookingForm from "./components/BookingForm";
 import MovieGrid from "./components/MovieGrid";
@@ -26,11 +27,19 @@ function App() {
   const [user, setUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [authInitialMode, setAuthInitialMode] = useState("login");
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [dashboardOpen, setDashboardOpen] = useState(false);
   const [bookingFocusRequest, setBookingFocusRequest] = useState(0);
   const [resumePaymentRequest, setResumePaymentRequest] = useState(0);
   const [authResumeAction, setAuthResumeAction] = useState(null);
   const canManageMovies = user?.role === "admin" || user?.role === "owner";
+
+  function openAuthModal(mode = "login", resumeAction = null) {
+    setAuthInitialMode(mode);
+    setAuthResumeAction(resumeAction);
+    setAuthModalOpen(true);
+  }
 
   useEffect(() => {
     let active = true;
@@ -123,11 +132,9 @@ function App() {
     setSelectedMovieId(movieId);
     setProfileMenuOpen(false);
     if (!user) {
-      setAuthResumeAction("booking");
-      setAuthModalOpen(true);
+      openAuthModal("login", "booking");
       return;
     }
-    setAuthResumeAction(null);
     setBookingFocusRequest((request) => request + 1);
     document.querySelector(".booking-form")?.scrollIntoView({
       behavior: "smooth",
@@ -160,6 +167,7 @@ function App() {
     try {
       await logoutUser();
       setUser(null);
+      setDashboardOpen(false);
       setManagementMessage("You’ve been logged out.");
     } catch (logoutError) {
       setManagementError(logoutError.message);
@@ -210,6 +218,26 @@ function App() {
         </a>
         <div className="header-actions">
           <span className="header-note">Your next movie night starts here</span>
+          {!user ? (
+            <div className="auth-actions">
+              <button
+                className="auth-action auth-action-secondary"
+                disabled={authLoading}
+                onClick={() => openAuthModal("login")}
+                type="button"
+              >
+                Sign In
+              </button>
+              <button
+                className="auth-action auth-action-primary"
+                disabled={authLoading}
+                onClick={() => openAuthModal("signup")}
+                type="button"
+              >
+                Sign Up
+              </button>
+            </div>
+          ) : null}
           <div className={`profile-menu-wrap${profileMenuOpen ? " menu-open" : ""}`}>
             <button
               aria-expanded={profileMenuOpen}
@@ -221,8 +249,7 @@ function App() {
                 if (user) {
                   setProfileMenuOpen((open) => !open);
                 } else {
-                  setAuthResumeAction(null);
-                  setAuthModalOpen(true);
+                  openAuthModal("login");
                 }
               }}
               type="button"
@@ -258,6 +285,19 @@ function App() {
                     <strong>{user.name}</strong>
                     <span>{user.email}</span>
                   </div>
+                  {canManageMovies ? (
+                    <button
+                      className="profile-dashboard"
+                      onClick={() => {
+                        setProfileMenuOpen(false);
+                        setDashboardOpen(true);
+                      }}
+                      role="menuitem"
+                      type="button"
+                    >
+                      Admin dashboard
+                    </button>
+                  ) : null}
                   <button
                     className="profile-logout"
                     onClick={() => {
@@ -276,12 +316,37 @@ function App() {
         </div>
       </header>
 
+      {dashboardOpen && canManageMovies ? (
+        <AdminDashboard
+          movies={movies}
+          onBack={() => setDashboardOpen(false)}
+        />
+      ) : (
+        <>
       <section className="hero">
         <p className="eyebrow">THE BIG SCREEN IS CALLING</p>
         <h1>Make it a movie night.</h1>
         <p className="hero-copy">
           Find your next favorite and save your seats in just a few clicks.
         </p>
+        <div className="hero-actions">
+          <button
+            className="auth-action auth-action-primary"
+            disabled={authLoading}
+            onClick={() => openAuthModal("signup")}
+            type="button"
+          >
+            Get started <span aria-hidden="true">→</span>
+          </button>
+          <button
+            className="hero-signin"
+            disabled={authLoading}
+            onClick={() => openAuthModal("login")}
+            type="button"
+          >
+            Already a member? Sign in
+          </button>
+        </div>
       </section>
 
       <section className="booking-layout" aria-label="Movie booking">
@@ -384,15 +449,17 @@ function App() {
           focusRequest={bookingFocusRequest}
           resumePaymentRequest={resumePaymentRequest}
           onAuthRequired={() => {
-            setAuthResumeAction("payment");
-            setAuthModalOpen(true);
+            openAuthModal("login", "payment");
           }}
         />
       </section>
+        </>
+      )}
 
       <footer>© {new Date().getFullYear()} iMovies. Your seat is waiting.</footer>
       {authModalOpen ? (
         <AuthModal
+          initialMode={authInitialMode}
           onAuthenticated={handleAuthenticated}
           onClose={() => {
             setAuthModalOpen(false);
