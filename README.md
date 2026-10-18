@@ -27,7 +27,8 @@ from a different origin.
 On the first successful connection, the backend seeds its sample movie
 catalogue when the movies collection is empty. On later starts, it adds any
 missing sample titles and fills missing release dates, trailer URLs, and ticket
-prices without replacing existing movie edits.
+prices. It also refreshes poster URLs for seeded titles without replacing
+other existing movie edits.
 
 ## Refresh movie posters
 

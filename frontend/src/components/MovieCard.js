@@ -6,11 +6,19 @@ function MoviePoster({ movie }) {
 
   if (!movie.posterUrl || failed) {
     return (
-      <img
-        className="poster poster-fallback"
-        src="/am-logo.png"
-        alt={`${movie.title} poster unavailable`}
-      />
+      <div
+        aria-label={`${movie.title} poster unavailable`}
+        className={`poster poster-placeholder poster-art poster-art-${(movie.genre || "other")
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "")}`}
+        role="img"
+      >
+        <span aria-hidden="true" className="poster-monogram">
+          {movie.title.trim().charAt(0).toUpperCase()}
+        </span>
+        <span className="poster-unavailable">Poster unavailable</span>
+      </div>
     );
   }
 
@@ -62,7 +70,7 @@ function MovieCard({
         aria-label={`Select ${movie.title}`}
       >
         <MoviePoster
-          key={movie.posterUrl || "fallback"}
+          key={movie.posterUrl || movie.title}
           movie={movie}
         />
         <span className="movie-info">

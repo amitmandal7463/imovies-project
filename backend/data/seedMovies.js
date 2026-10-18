@@ -194,7 +194,7 @@ const seedMovies = [
     rating: 8.2,
     price: 250,
     posterUrl:
-      "https://upload.wikimedia.org/wikipedia/en/c/cc/K.G.F_Chapter_1_poster.jpg",
+      "https://upload.wikimedia.org/wikipedia/en/c/cc/K.G.F_Chapter_1_poster.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
     trailerUrl: "https://www.youtube.com/watch?v=-KfsY-qwBS0",
     showtimes: ["1:00 PM", "5:00 PM", "9:00 PM"],
   },
@@ -208,7 +208,8 @@ const seedMovies = [
     durationMinutes: 168,
     rating: 8.2,
     price: 300,
-    posterUrl: "https://upload.wikimedia.org/wikipedia/en/d/d0/K.G.F_Chapter_2.jpg",
+    posterUrl:
+      "https://upload.wikimedia.org/wikipedia/en/d/d0/K.G.F_Chapter_2.jpg?utm_source=en.wikipedia.org&utm_campaign=api&utm_content=thumbnail_unscaled",
     trailerUrl: "https://www.youtube.com/watch?v=JKa05nyUmuQ",
     showtimes: ["12:30 PM", "4:30 PM", "8:30 PM"],
   },
@@ -218,7 +219,7 @@ async function seedMoviesIfNeeded() {
   const movieCount = await Movie.countDocuments();
   const existingMovies = await Movie.find(
     { title: { $in: seedMovies.map(({ title }) => title) } },
-    "title releaseDate trailerUrl"
+    "title posterUrl releaseDate trailerUrl"
   ).lean();
   const existingByTitle = new Map(existingMovies.map((movie) => [movie.title, movie]));
   const missingMovies = seedMovies.filter(({ title }) => !existingByTitle.has(title));
@@ -240,6 +241,9 @@ async function seedMoviesIfNeeded() {
     }
     if (!existing.trailerUrl && movie.trailerUrl) {
       missingMetadata.trailerUrl = movie.trailerUrl;
+    }
+    if (existing.posterUrl !== movie.posterUrl) {
+      missingMetadata.posterUrl = movie.posterUrl;
     }
     return Object.keys(missingMetadata).length
       ? [{ updateOne: { filter: { title: movie.title }, update: { $set: missingMetadata } } }]

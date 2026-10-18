@@ -286,7 +286,7 @@ function App() {
               aria-expanded={profileMenuOpen}
               aria-haspopup={user ? "menu" : undefined}
               aria-label={user ? `Account menu for ${user.name}` : "Log in or sign up"}
-              className={`profile-trigger${user ? " signed-in" : ""}`}
+              className={`profile-trigger${user ? " signed-in" : " signed-out"}`}
               disabled={authLoading}
               onClick={() => {
                 if (user) {
