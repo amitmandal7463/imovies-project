@@ -527,6 +527,39 @@ h2 {
   color: #9ee0b0;
 }
 
+.booking-order-status.cancelled {
+  color: #e58d84;
+}
+
+.booking-cancel-button {
+  margin-top: 12px;
+  padding: 8px 11px;
+  border: 1px solid rgba(229, 141, 132, 0.35);
+  border-radius: 6px;
+  background: rgba(229, 141, 132, 0.08);
+  color: #eaa29a;
+  font: inherit;
+  font-size: 11px;
+  cursor: pointer;
+}
+
+.booking-cancel-button:hover:not(:disabled) {
+  border-color: rgba(229, 141, 132, 0.7);
+  background: rgba(229, 141, 132, 0.15);
+}
+
+.booking-cancel-button:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.booking-cancellation-hint {
+  margin: 11px 0 0;
+  color: #99958f;
+  font-size: 10px;
+  line-height: 1.5;
+}
+
 .booking-summary-empty {
   padding: 26px 12px;
   text-align: center;
@@ -1833,6 +1866,55 @@ footer {
   font-size: 10px;
 }
 
+.admin-bookings-panel {
+  grid-column: 1 / -1;
+}
+
+.admin-booking-list {
+  display: grid;
+}
+
+.admin-booking-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 12px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+.admin-booking-row > div:first-child {
+  display: grid;
+  min-width: 0;
+  gap: 5px;
+}
+
+.admin-booking-row strong {
+  font-size: 12px;
+}
+
+.admin-booking-row span {
+  color: #aaa6a0;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+}
+
+.admin-booking-row .booking-order-status {
+  font-size: 10px;
+}
+
+.admin-booking-actions {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.admin-booking-actions .booking-cancel-button {
+  margin-top: 2px;
+}
+
 @media (max-width: 760px) {
   .page {
     width: min(100% - 32px, 560px);
@@ -1998,5 +2080,14 @@ footer {
   .booking-order-footer {
     align-items: flex-start;
     flex-wrap: wrap;
+  }
+
+  .admin-booking-row {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .admin-booking-actions {
+    align-items: flex-start;
   }
 }

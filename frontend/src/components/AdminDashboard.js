@@ -23,7 +23,15 @@ const emptyTheater = {
   screens: "",
 };
 
-function AdminDashboard({ movies, onBack }) {
+function AdminDashboard({
+  movies,
+  bookings,
+  bookingsLoading,
+  bookingsError,
+  onCancelBooking,
+  onBookingsRetry,
+  onBack,
+}) {
   const [activeForm, setActiveForm] = useState("");
   const [localMovies, setLocalMovies] = useState([]);
   const [removedMovieIds, setRemovedMovieIds] = useState([]);
@@ -33,6 +41,8 @@ function AdminDashboard({ movies, onBack }) {
   const [showFields, setShowFields] = useState(emptyShow);
   const [theaterFields, setTheaterFields] = useState(emptyTheater);
   const [message, setMessage] = useState("");
+  const [bookingActionError, setBookingActionError] = useState("");
+  const [cancellingBookingId, setCancellingBookingId] = useState("");
 
   const visibleMovies = [
     ...movies.filter((movie) => !removedMovieIds.includes(movie._id)),
@@ -93,6 +103,33 @@ function AdminDashboard({ movies, onBack }) {
     } else {
       setRemovedMovieIds((current) => [...current, movie._id]);
     }
+  }
+
+  async function cancelBooking(booking) {
+    setCancellingBookingId(booking._id);
+    setBookingActionError("");
+    try {
+      await onCancelBooking(booking._id);
+    } catch (error) {
+      setBookingActionError(error.message);
+    } finally {
+      setCancellingBookingId("");
+    }
+  }
+
+  function formatBookingDate(value) {
+    if (!value) {
+      return "Date unavailable";
+    }
+    const date = new Date(`${value}T00:00:00Z`);
+    return Number.isNaN(date.getTime())
+      ? value
+      : date.toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC",
+        });
   }
 
   return (
@@ -431,6 +468,60 @@ function AdminDashboard({ movies, onBack }) {
       </section>
 
       <div className="admin-record-lists">
+        <section className="admin-record-panel admin-bookings-panel" aria-labelledby="admin-bookings-title">
+          <div className="admin-section-heading">
+            <div>
+              <p className="eyebrow">CUSTOMER ORDERS</p>
+              <h2 id="admin-bookings-title">Booking management</h2>
+            </div>
+            <span className="admin-count">{bookings.length} bookings</span>
+          </div>
+          {bookingsError ? (
+            <div className="feedback error" role="alert">
+              <p>{bookingsError}</p>
+              <button className="retry-button" onClick={onBookingsRetry} type="button">
+                Try again
+              </button>
+            </div>
+          ) : bookingsLoading ? (
+            <p className="admin-empty-hint" role="status">Loading customer bookings…</p>
+          ) : bookings.length ? (
+            <div className="admin-booking-list">
+              {bookings.map((booking) => (
+                <article className="admin-booking-row" key={booking._id}>
+                  <div>
+                    <strong>{booking.movie?.title || "Movie unavailable"}</strong>
+                    <span>{booking.customerName} · {booking.email}</span>
+                    <span>
+                      {formatBookingDate(booking.showDate)} · {booking.showtime} · {booking.seats} seats
+                    </span>
+                  </div>
+                  <div className="admin-booking-actions">
+                    <span className={`booking-order-status${booking.status === "cancelled" ? " cancelled" : ""}`}>
+                      {booking.status === "cancelled" ? "Cancelled" : "Confirmed"}
+                    </span>
+                    {booking.status === "cancelled" ? null : (
+                      <button
+                        className="booking-cancel-button"
+                        disabled={cancellingBookingId === booking._id}
+                        onClick={() => cancelBooking(booking)}
+                        type="button"
+                      >
+                        {cancellingBookingId === booking._id ? "Cancelling…" : "Cancel booking"}
+                      </button>
+                    )}
+                  </div>
+                </article>
+              ))}
+            </div>
+          ) : (
+            <p className="admin-empty-hint">No customer bookings yet.</p>
+          )}
+          {bookingActionError ? (
+            <p className="feedback error" role="alert">{bookingActionError}</p>
+          ) : null}
+        </section>
+
         <section className="admin-record-panel" aria-labelledby="admin-shows-title">
           <div className="admin-section-heading">
             <h2 id="admin-shows-title">Shows</h2>

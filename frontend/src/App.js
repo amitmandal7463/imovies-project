@@ -6,8 +6,10 @@ import BookingSummary from "./components/BookingSummary";
 import BookingForm from "./components/BookingForm";
 import MovieCatalog from "./components/MovieCatalog";
 import {
+  cancelBooking,
   deleteMovie,
   getBookings,
+  getAdminBookings,
   getCurrentUser,
   getMovies,
   logoutUser,
@@ -39,6 +41,10 @@ function App() {
   const [bookingsLoading, setBookingsLoading] = useState(false);
   const [bookingsError, setBookingsError] = useState("");
   const [bookingsReload, setBookingsReload] = useState(0);
+  const [adminBookings, setAdminBookings] = useState([]);
+  const [adminBookingsLoading, setAdminBookingsLoading] = useState(false);
+  const [adminBookingsError, setAdminBookingsError] = useState("");
+  const [adminBookingsReload, setAdminBookingsReload] = useState(0);
   const canManageMovies = user?.role === "admin" || user?.role === "owner";
 
   function openAuthModal(mode = "login", resumeAction = null) {
@@ -109,7 +115,6 @@ function App() {
 
     const controller = new AbortController();
     let active = true;
-    setBookings([]);
     setBookingsLoading(true);
     setBookingsError("");
 
@@ -135,6 +140,42 @@ function App() {
       controller.abort();
     };
   }, [user?.id, bookingsReload]);
+
+  useEffect(() => {
+    if (!dashboardOpen || !canManageMovies) {
+      setAdminBookings([]);
+      setAdminBookingsError("");
+      setAdminBookingsLoading(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+    setAdminBookingsLoading(true);
+    setAdminBookingsError("");
+
+    getAdminBookings({ signal: controller.signal })
+      .then((result) => {
+        if (active) {
+          setAdminBookings(result);
+        }
+      })
+      .catch((loadError) => {
+        if (active && loadError.name !== "AbortError") {
+          setAdminBookingsError(loadError.message);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setAdminBookingsLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [dashboardOpen, canManageMovies, adminBookingsReload]);
 
   const genres = useMemo(
     () => [...new Set(movies.map((movie) => movie.genre).filter(Boolean))].sort(),
@@ -239,6 +280,40 @@ function App() {
     } finally {
       setDeletingMovieId("");
     }
+  }
+
+  function handleBookingSaved(booking) {
+    setBookings((current) => [
+      booking,
+      ...current.filter((item) => item._id !== booking._id),
+    ]);
+    setBookingsError("");
+    setBookingsReload((current) => current + 1);
+  }
+
+  async function handleCustomerBookingCancel(bookingId) {
+    const cancelledBooking = await cancelBooking(bookingId);
+    setBookings((current) =>
+      current.map((booking) =>
+        booking._id === cancelledBooking._id ? cancelledBooking : booking
+      )
+    );
+    return cancelledBooking;
+  }
+
+  async function handleAdminBookingCancel(bookingId) {
+    const cancelledBooking = await cancelBooking(bookingId);
+    setAdminBookings((current) =>
+      current.map((booking) =>
+        booking._id === cancelledBooking._id ? cancelledBooking : booking
+      )
+    );
+    setBookings((current) =>
+      current.map((booking) =>
+        booking._id === cancelledBooking._id ? cancelledBooking : booking
+      )
+    );
+    return cancelledBooking;
   }
 
   return (
@@ -361,8 +436,13 @@ function App() {
 
       {dashboardOpen && canManageMovies ? (
         <AdminDashboard
+          bookings={adminBookings}
+          bookingsLoading={adminBookingsLoading}
+          bookingsError={adminBookingsError}
           movies={movies}
+          onCancelBooking={handleAdminBookingCancel}
           onBack={() => setDashboardOpen(false)}
+          onBookingsRetry={() => setAdminBookingsReload((current) => current + 1)}
         />
       ) : (
         <>
@@ -480,7 +560,7 @@ function App() {
           onAuthRequired={() => {
             openAuthModal("login", "payment");
           }}
-          onBookingComplete={() => setBookingsReload((current) => current + 1)}
+          onBookingSaved={handleBookingSaved}
         />
       </section>
       {user ? (
@@ -488,6 +568,7 @@ function App() {
           bookings={bookings}
           loading={bookingsLoading}
           error={bookingsError}
+          onCancelBooking={handleCustomerBookingCancel}
         />
       ) : null}
         </>

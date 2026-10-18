@@ -22,7 +22,8 @@ npm run dev
 
 The API starts at `http://localhost:5000`. You can change the port with
 `PORT` and set `FRONTEND_URL` in `backend/.env` if the frontend is served
-from a different origin.
+from a different origin. Booking dates and showtimes use the backend host's
+local timezone; configure the Node process timezone to the theater's timezone.
 
 On the first successful connection, the backend seeds its sample movie
 catalogue when the movies collection is empty. On later starts, it adds any
@@ -95,14 +96,18 @@ the booking. No real payment is processed.
 - `DELETE /api/movies/:id` — delete a movie (only when it has no bookings)
 - `GET /api/bookings` — list bookings
 - `POST /api/bookings` — book seats for a movie
+- `POST /api/bookings/:id/cancel` — cancel an owned booking (at least 5 hours
+  before its showtime) or any booking as an admin/owner
+- `GET /api/bookings/admin` — list all bookings for admins/owners
 
 Roles are `customer`, `admin`, and `owner`. Public registration always creates
 a `customer`; submitted role values are ignored. The signup form includes a
 role selector, but only customer registration is available; admin and owner
 access is assigned separately. Movie browsing is public, booking endpoints
 require login, and movie create/update/delete endpoints require `admin` or
-`owner`. Roles are loaded from MongoDB for each authorized request rather than
-trusted from browser data.
+`owner`. Booking management is also restricted to admins and owners. Roles are
+loaded from MongoDB for each authorized request rather than trusted from browser
+data.
 
 To bootstrap an owner on backend startup, configure `OWNER_EMAIL` and
 `OWNER_PASSWORD` in `backend/.env` (use a unique password of 12-72 UTF-8 bytes
@@ -118,7 +123,8 @@ the selected movie’s booking step. Signed-in users can open the profile menu
 to log out.
 
 Movie records include `price` in whole rupees. Booking requests include
-`movie` (the movie ID), `showtime`, and `seats` (a whole number between 1 and
-10). The API takes customer details from the authenticated account and
-calculates/stores ticket price and total using the current movie price;
-client-supplied totals and payment credentials are not trusted.
+`movie` (the movie ID), `showDate`, `showtime`, and `seats` (a whole number
+between 1 and 10). The API takes customer details from the authenticated
+account and calculates/stores ticket price and total using the current movie
+price; client-supplied totals and payment credentials are not trusted. Older
+bookings without a show date use their creation date for cancellation checks.

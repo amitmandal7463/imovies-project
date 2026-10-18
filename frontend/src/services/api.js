@@ -83,4 +83,14 @@ export function getBookings({ signal } = {}) {
   return request("/api/bookings", { signal });
 }
 
+export function getAdminBookings({ signal } = {}) {
+  return request("/api/bookings/admin", { signal });
+}
+
+export function cancelBooking(bookingId) {
+  return request(`/api/bookings/${encodeURIComponent(bookingId)}/cancel`, {
+    method: "POST",
+  });
+}
+
 export { API_URL };

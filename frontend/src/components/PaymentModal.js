@@ -10,6 +10,8 @@ const paymentMethods = [
 function PaymentModal({
   movie,
   seats,
+  showDate,
+  showtime,
   submitting,
   onClose,
   onPay,
@@ -169,6 +171,10 @@ function PaymentModal({
               <div className="ticket-summary-title">
                 <span>{movie.title}</span>
                 <span>{seats} {seats === 1 ? "ticket" : "tickets"}</span>
+              </div>
+              <div className="ticket-summary-row">
+                <span>Showtime</span>
+                <span>{showDate} · {showtime}</span>
               </div>
               <div className="ticket-summary-row">
                 <span>{formatPrice(movie.price)} × {seats} tickets</span>

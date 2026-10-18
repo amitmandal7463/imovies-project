@@ -5,8 +5,15 @@ import PaymentModal from "./PaymentModal";
 
 const initialFields = {
   showtime: "",
+  showDate: "",
   seats: "1",
 };
+
+function getLocalDateValue() {
+  const now = new Date();
+  const offset = now.getTimezoneOffset() * 60 * 1000;
+  return new Date(now.getTime() - offset).toISOString().slice(0, 10);
+}
 
 function BookingForm({
   movies,
@@ -17,7 +24,7 @@ function BookingForm({
   focusRequest,
   resumePaymentRequest,
   onAuthRequired,
-  onBookingComplete,
+  onBookingSaved,
 }) {
   const [fields, setFields] = useState(initialFields);
   const [submitting, setSubmitting] = useState(false);
@@ -68,22 +75,24 @@ function BookingForm({
   async function payAndBook() {
     setSubmitting(true);
     try {
-      return await createBooking({
+      const booking = await createBooking({
         ...fields,
         movie: selectedMovieId,
         seats: Number(fields.seats),
       });
+      onBookingSaved(booking);
+      return booking;
     } finally {
       setSubmitting(false);
     }
   }
 
   function completeBooking(booking) {
-    onBookingComplete(booking);
     setConfirmation(
       `Payment Confirmed & Ticket Booked! ${booking.seats} ` +
         `${booking.seats === 1 ? "ticket" : "tickets"} for ${booking.movie.title} ` +
-        `at ${booking.showtime}. Total paid: ${formatPrice(booking.totalPrice)}.`
+        `on ${booking.showDate} at ${booking.showtime}. ` +
+        `Total paid: ${formatPrice(booking.totalPrice)}.`
     );
     setFields((current) => ({
       ...initialFields,
@@ -104,6 +113,17 @@ function BookingForm({
             <option key={movie._id} value={movie._id}>{movie.title}</option>
           ))}
         </select>
+      </label>
+      <label>
+        Show date
+        <input
+          min={getLocalDateValue()}
+          name="showDate"
+          onChange={updateField}
+          required
+          type="date"
+          value={fields.showDate}
+        />
       </label>
       <label>
         Show time
@@ -149,6 +169,8 @@ function BookingForm({
         <PaymentModal
           movie={selectedMovie}
           seats={Number(fields.seats)}
+          showDate={fields.showDate}
+          showtime={fields.showtime}
           submitting={submitting}
           onClose={closePayment}
           onPay={payAndBook}
