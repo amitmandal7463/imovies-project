@@ -5,6 +5,7 @@ const movieSchema = new mongoose.Schema(
     title: { type: String, required: true, trim: true },
     description: { type: String, default: "", maxlength: 2000 },
     genre: { type: String, required: true, trim: true, default: "Other" },
+    releaseDate: { type: Date },
     releaseYear: { type: Number, min: 1888, max: 2200 },
     durationMinutes: { type: Number, required: true, min: 1, max: 600 },
     rating: { type: Number, min: 0, max: 10 },
@@ -36,6 +37,29 @@ const movieSchema = new mongoose.Schema(
           }
         },
         message: "Poster URL must be a valid http or https URL.",
+      },
+    },
+    trailerUrl: {
+      type: String,
+      default: "",
+      trim: true,
+      validate: {
+        validator: (value) => {
+          if (!value) {
+            return true;
+          }
+
+          try {
+            const url = new URL(value);
+            return (
+              (url.protocol === "http:" || url.protocol === "https:") &&
+              Boolean(url.hostname)
+            );
+          } catch {
+            return false;
+          }
+        },
+        message: "Trailer URL must be a valid http or https URL.",
       },
     },
     showtimes: {

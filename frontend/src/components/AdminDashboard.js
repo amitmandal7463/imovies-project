@@ -39,6 +39,18 @@ function AdminDashboard({ movies, onBack }) {
     ...localMovies,
   ];
 
+  function formatReleaseDate(value) {
+    const date = new Date(value);
+    return Number.isNaN(date.getTime())
+      ? value
+      : date.toLocaleDateString(undefined, {
+          year: "numeric",
+          month: "short",
+          day: "numeric",
+          timeZone: "UTC",
+        });
+  }
+
   function setForm(form) {
     setActiveForm((current) => current === form ? "" : form);
     setMessage("");
@@ -389,9 +401,21 @@ function AdminDashboard({ movies, onBack }) {
                     </p>
                     <p className="admin-movie-description">{description}</p>
                     {movie.releaseDate ? (
-                      <p className="admin-movie-meta">Release date: {movie.releaseDate}</p>
+                      <p className="admin-movie-meta">
+                        Release date: {formatReleaseDate(movie.releaseDate)}
+                      </p>
                     ) : movie.releaseYear ? (
                       <p className="admin-movie-meta">Release year: {movie.releaseYear}</p>
+                    ) : null}
+                    {movie.trailerUrl ? (
+                      <a
+                        className="admin-trailer-link"
+                        href={movie.trailerUrl}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      >
+                        Watch trailer ↗
+                      </a>
                     ) : null}
                   </div>
                 </article>

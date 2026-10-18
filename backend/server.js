@@ -5,7 +5,7 @@ const cookieParser = require("cookie-parser");
 const express = require("express");
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
-const { seedMoviesIfEmpty } = require("./data/seedMovies");
+const { seedMoviesIfNeeded } = require("./data/seedMovies");
 const User = require("./models/User");
 const authRoutes = require("./routes/authRoutes");
 const bookingRoutes = require("./routes/bookingRoutes");
@@ -99,7 +99,7 @@ async function start() {
 
   await mongoose.connect(process.env.MONGODB_URI);
   await prepareUserRoles();
-  await seedMoviesIfEmpty();
+  await seedMoviesIfNeeded();
   return app.listen(port, () => {
     console.log(`iMovies API listening on port ${port}`);
   });

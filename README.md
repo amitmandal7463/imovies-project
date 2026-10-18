@@ -24,14 +24,15 @@ The API starts at `http://localhost:5000`. You can change the port with
 `PORT` and set `FRONTEND_URL` in `backend/.env` if the frontend is served
 from a different origin.
 
-On the first successful connection, the backend seeds ten sample movies when
-the movies collection is empty. Later starts leave the existing movie data
-untouched.
+On the first successful connection, the backend seeds its sample movie
+catalogue when the movies collection is empty. On later starts, it adds any
+missing sample titles and fills missing release dates, trailer URLs, and ticket
+prices without replacing existing movie edits.
 
 ## Refresh movie posters
 
-The seed catalogue includes poster URLs. To update the poster URLs on the ten
-existing sample movie records without replacing other movie or booking data,
+The seed catalogue includes poster URLs. To update the poster URLs on sample
+movie records without replacing other movie or booking data,
 run this from the `backend` directory:
 
 ```powershell
@@ -71,7 +72,7 @@ are not sent to the API; this demo does not process or charge real payments.
 
 Existing sample movies are automatically assigned their seed prices at backend
 startup if their price is missing. You can explicitly reset prices on those
-ten sample titles with `npm run update:prices` from `backend`.
+seed titles with `npm run update:prices` from `backend`.
 
 The checkout supports mock UPI (Google Pay, PhonePe, or Paytm), demo card
 details, and demo net banking. For the card flow, use the displayed test values

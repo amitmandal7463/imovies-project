@@ -7,11 +7,13 @@ function movieFields(body) {
     "title",
     "description",
     "genre",
+    "releaseDate",
     "releaseYear",
     "durationMinutes",
     "rating",
     "price",
     "posterUrl",
+    "trailerUrl",
     "showtimes",
   ];
 

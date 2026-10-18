@@ -4,11 +4,13 @@ import { createMovie } from "../services/api";
 const initialFields = {
   title: "",
   genre: "",
+  releaseDate: "",
   releaseYear: "",
   durationMinutes: "",
   price: "",
   rating: "",
   posterUrl: "",
+  trailerUrl: "",
   description: "",
   showtimes: "",
 };
@@ -41,8 +43,14 @@ function AddMovieForm({ onMovieAdded, onCancel }) {
     if (fields.releaseYear) {
       movie.releaseYear = Number(fields.releaseYear);
     }
+    if (fields.releaseDate) {
+      movie.releaseDate = fields.releaseDate;
+    }
     if (fields.rating) {
       movie.rating = Number(fields.rating);
+    }
+    if (fields.trailerUrl.trim()) {
+      movie.trailerUrl = fields.trailerUrl.trim();
     }
 
     try {
@@ -125,6 +133,15 @@ function AddMovieForm({ onMovieAdded, onCancel }) {
           />
         </label>
         <label>
+          Release date
+          <input
+            name="releaseDate"
+            onChange={updateField}
+            type="date"
+            value={fields.releaseDate}
+          />
+        </label>
+        <label>
           Rating (0–10)
           <input
             max="10"
@@ -134,6 +151,17 @@ function AddMovieForm({ onMovieAdded, onCancel }) {
             step="0.1"
             type="number"
             value={fields.rating}
+          />
+        </label>
+        <label>
+          Trailer URL (optional)
+          <input
+            maxLength="1000"
+            name="trailerUrl"
+            onChange={updateField}
+            placeholder="https://www.youtube.com/watch?v=..."
+            type="url"
+            value={fields.trailerUrl}
           />
         </label>
         <label>

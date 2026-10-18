@@ -25,6 +25,21 @@ function MoviePoster({ movie }) {
   );
 }
 
+function releaseLabel(movie) {
+  if (movie.releaseDate) {
+    const date = new Date(movie.releaseDate);
+    if (!Number.isNaN(date.getTime())) {
+      return date.toLocaleDateString(undefined, {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        timeZone: "UTC",
+      });
+    }
+  }
+  return movie.releaseYear ? String(movie.releaseYear) : "";
+}
+
 function MovieCard({
   movie,
   selected,
@@ -35,6 +50,8 @@ function MovieCard({
   onDelete,
   onBook,
 }) {
+  const release = releaseLabel(movie);
+
   return (
     <article className={`movie-card${selected ? " selected" : ""}`}>
       <button
@@ -52,12 +69,23 @@ function MovieCard({
           <strong>{movie.title}</strong>
           <span>
             {movie.genre}
-            {movie.releaseYear ? ` · ${movie.releaseYear}` : ""}
+            {release ? ` · ${release}` : ""}
           </span>
           <span>{movie.durationMinutes} min</span>
+          {movie.description ? <span className="movie-description">{movie.description}</span> : null}
           <span className="movie-price">{formatPrice(movie.price)} / ticket</span>
         </span>
       </button>
+      {movie.trailerUrl ? (
+        <a
+          className="movie-trailer-link"
+          href={movie.trailerUrl}
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Watch trailer <span aria-hidden="true">↗</span>
+        </a>
+      ) : null}
       <button
         className="book-ticket-button"
         type="button"
