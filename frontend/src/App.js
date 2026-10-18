@@ -2,10 +2,12 @@ import { useEffect, useMemo, useState } from "react";
 import AddMovieForm from "./components/AddMovieForm";
 import AdminDashboard from "./components/AdminDashboard";
 import AuthModal from "./components/AuthModal";
+import BookingSummary from "./components/BookingSummary";
 import BookingForm from "./components/BookingForm";
-import MovieGrid from "./components/MovieGrid";
+import MovieCatalog from "./components/MovieCatalog";
 import {
   deleteMovie,
+  getBookings,
   getCurrentUser,
   getMovies,
   logoutUser,
@@ -33,6 +35,10 @@ function App() {
   const [bookingFocusRequest, setBookingFocusRequest] = useState(0);
   const [resumePaymentRequest, setResumePaymentRequest] = useState(0);
   const [authResumeAction, setAuthResumeAction] = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [bookingsLoading, setBookingsLoading] = useState(false);
+  const [bookingsError, setBookingsError] = useState("");
+  const [bookingsReload, setBookingsReload] = useState(0);
   const canManageMovies = user?.role === "admin" || user?.role === "owner";
 
   function openAuthModal(mode = "login", resumeAction = null) {
@@ -92,6 +98,43 @@ function App() {
     loadMovies();
     return () => controller.abort();
   }, [reload]);
+
+  useEffect(() => {
+    if (!user) {
+      setBookings([]);
+      setBookingsError("");
+      setBookingsLoading(false);
+      return undefined;
+    }
+
+    const controller = new AbortController();
+    let active = true;
+    setBookings([]);
+    setBookingsLoading(true);
+    setBookingsError("");
+
+    getBookings({ signal: controller.signal })
+      .then((result) => {
+        if (active) {
+          setBookings(result);
+        }
+      })
+      .catch((loadError) => {
+        if (active && loadError.name !== "AbortError") {
+          setBookingsError(loadError.message);
+        }
+      })
+      .finally(() => {
+        if (active) {
+          setBookingsLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+      controller.abort();
+    };
+  }, [user?.id, bookingsReload]);
 
   const genres = useMemo(
     () => [...new Set(movies.map((movie) => movie.genre).filter(Boolean))].sort(),
@@ -374,25 +417,6 @@ function App() {
             </div>
           </div>
 
-          <div className="movie-filters">
-            <label className="search-field">
-              <span className="visually-hidden">Search movies</span>
-              <input
-                type="search"
-                value={search}
-                onChange={(event) => setSearch(event.target.value)}
-                placeholder="Search titles and genres"
-              />
-            </label>
-            <label className="genre-field">
-              <span className="visually-hidden">Filter by genre</span>
-              <select value={genre} onChange={(event) => setGenre(event.target.value)}>
-                <option value="">All genres</option>
-                {genres.map((item) => <option key={item} value={item}>{item}</option>)}
-              </select>
-            </label>
-          </div>
-
           {canManageMovies && addMovieOpen ? (
             <AddMovieForm
               onMovieAdded={handleMovieAdded}
@@ -427,8 +451,13 @@ function App() {
               <p>Check back soon for what’s playing.</p>
             </div>
           ) : (
-            <MovieGrid
-              movies={visibleMovies}
+            <MovieCatalog
+              visibleMovies={visibleMovies}
+              search={search}
+              genre={genre}
+              genres={genres}
+              onSearchChange={setSearch}
+              onGenreChange={setGenre}
               selectedMovieId={selectedMovieId}
               deletingMovieId={deletingMovieId}
               canManageMovies={canManageMovies}
@@ -451,8 +480,16 @@ function App() {
           onAuthRequired={() => {
             openAuthModal("login", "payment");
           }}
+          onBookingComplete={() => setBookingsReload((current) => current + 1)}
         />
       </section>
+      {user ? (
+        <BookingSummary
+          bookings={bookings}
+          loading={bookingsLoading}
+          error={bookingsError}
+        />
+      ) : null}
         </>
       )}
 

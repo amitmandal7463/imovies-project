@@ -17,6 +17,7 @@ function BookingForm({
   focusRequest,
   resumePaymentRequest,
   onAuthRequired,
+  onBookingComplete,
 }) {
   const [fields, setFields] = useState(initialFields);
   const [submitting, setSubmitting] = useState(false);
@@ -78,6 +79,7 @@ function BookingForm({
   }
 
   function completeBooking(booking) {
+    onBookingComplete(booking);
     setConfirmation(
       `Payment Confirmed & Ticket Booked! ${booking.seats} ` +
         `${booking.seats === 1 ? "ticket" : "tickets"} for ${booking.movie.title} ` +

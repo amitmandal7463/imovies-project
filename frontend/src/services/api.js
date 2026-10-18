@@ -79,4 +79,8 @@ export function createBooking(booking) {
   });
 }
 
+export function getBookings({ signal } = {}) {
+  return request("/api/bookings", { signal });
+}
+
 export { API_URL };
